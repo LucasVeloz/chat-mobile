@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, StatusBar } from 'react-native';
+import { FlatList, Platform, StatusBar } from 'react-native';
 import { getStatusBarHeight } from 'react-native-iphone-x-helper';
 import * as Device from 'expo-device';
 import { io } from 'socket.io-client';
@@ -46,7 +46,7 @@ export function Main() {
   }
 
   return (
-    <Container behavior="padding">
+    <Container behavior={Platform.OS === 'ios' ? "padding" : "height"}>
       <StatusBar backgroundColor="black" barStyle="dark-content" />
       <FlatList
         data={messages}
