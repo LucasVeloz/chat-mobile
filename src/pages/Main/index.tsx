@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import * as Device from 'expo-device';
-
+import React, { useState, useEffect } from 'react';
 import { FlatList, StatusBar } from 'react-native';
-import { Container, Input, MyMessages, MyMessagesText, OtherMessages, OtherMessagesText } from './styles'
-
-import { io } from 'socket.io-client';
-import { useEffect } from 'react';
 import { getStatusBarHeight } from 'react-native-iphone-x-helper';
+import * as Device from 'expo-device';
+import { io } from 'socket.io-client';
+import moment from 'moment';
+
+import { 
+  Container, 
+  HourText, 
+  Input, 
+  InputContainer, 
+  MessagesText, 
+  MyMessages, 
+  OtherMessages, 
+} from './styles'
 
 interface MessageProps {
   id: string;
@@ -14,10 +21,9 @@ interface MessageProps {
   hour: Date;
   };
 
+
 export function Main() {
-  const socket = io('https://chat-teste-123.herokuapp.com/', {
-    transports: ['websocket']
-  });
+  const socket = io('https://chat-teste-123.herokuapp.com');
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageProps[]>([]);
 
@@ -40,7 +46,7 @@ export function Main() {
   }
 
   return (
-    <Container>
+    <Container behavior="padding">
       <StatusBar backgroundColor="black" barStyle="dark-content" />
       <FlatList
         data={messages}
@@ -48,29 +54,38 @@ export function Main() {
         renderItem={ ({ item }) => {
           if (item.id === Device.deviceName) {
             return (
-              <MyMessages>
-                <MyMessagesText>{item.message}</MyMessagesText>
+              <MyMessages >
+                <MessagesText>{item.message}</MessagesText>
+                <HourText>{moment(item.hour).format('HH:mm')}</HourText>
               </MyMessages>
             )
           };
           return (
-            <OtherMessages>
-              <OtherMessagesText>{item.message}</OtherMessagesText>
+            <OtherMessages style={{
+              borderBottomLeftRadius: -1
+            }}>
+              <MessagesText>{item.message}</MessagesText>
+              <HourText>{moment(item.hour).format('HH:mm')}</HourText>
             </OtherMessages>
           )
         }}
         contentContainerStyle={
           {
-            paddingVertical: getStatusBarHeight() + 20
+            paddingVertical: getStatusBarHeight() + 20,
+            paddingHorizontal: 20,
           }
         }
         showsVerticalScrollIndicator={false}
       />
-      <Input 
-        value={inputValue} 
-        onChangeText={setInputValue}
-        onSubmitEditing={handleSubmit}
-      />
-  </Container>
+      <InputContainer>
+        <Input 
+          value={inputValue} 
+          onChangeText={setInputValue}
+          onSubmitEditing={handleSubmit}
+          clearButtonMode="always"
+          blurOnSubmit={false}
+          />
+      </InputContainer>
+    </Container>
   );
 }
