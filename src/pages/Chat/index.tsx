@@ -1,69 +1,97 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, Platform, StatusBar } from 'react-native';
+import { FlatList, Keyboard, Platform } from 'react-native';
 import { getStatusBarHeight } from 'react-native-iphone-x-helper';
-import * as Device from 'expo-device';
-import { io } from 'socket.io-client';
 import moment from 'moment';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { useRoute, useNavigation } from '@react-navigation/native';
+
+import { useEmitSocket, useOnSocket } from '../../hooks/useSocket';
 
 import { 
   Container, 
   HourText, 
   Input, 
-  InputContainer, 
+  InputContainer as InputView, 
   MessagesText, 
   MyMessages, 
-  OtherMessages, 
+  OtherMessages,
+  UsernameText, 
 } from './styles'
 
+const InputContainer = Animated.createAnimatedComponent(InputView);
+
 interface MessageProps {
-  id: string;
+  name: string;
   message: string;
   hour: Date;
   };
 
 
-export function Main() {
-  const socket = io('https://chat-teste-123.herokuapp.com');
+export function Chat() {
+  const { params } = useRoute() as {params: {name: string, room: string }};
+  const navigation = useNavigation();
+  const name = params.name;
+  const room = params.room;
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageProps[]>([]);
+  const bottom = useSharedValue(20);
 
-
-  socket.emit('connected', Device.deviceName);
-
+  
+  const rStyle = useAnimatedStyle(() => ({
+    bottom: bottom.value,
+  }))
+  
   useEffect(() => {
-    socket.on('chat', (data) => {
-      setMessages(oldState => [...oldState, data]);
-    })
+    navigation.setOptions({title: room});
+  }, [])
+  
+  useEffect(() => {
+    useOnSocket({
+      message: 'chat',
+      callback: (data: any) => { 
+        setMessages(oldState => [...oldState, data]);
+      },
+      data: {},
+    });
   }, [])
 
   const handleSubmit = () => {
-    socket.emit('message', {
-      id: Device.deviceName,
-      hour: new Date(),
-      message: inputValue,
-    })
+    useEmitSocket({
+      message: 'message',
+      data: {
+        name,
+        hour: new Date(),
+        message: inputValue,
+        room,
+      }
+    });
     setInputValue('')
   }
 
+  Keyboard.addListener('keyboardWillShow', (event) => {
+    bottom.value = withTiming(event.endCoordinates.height);
+  })
+  Keyboard.addListener('keyboardWillHide', () => {
+    bottom.value = withTiming(20);
+  })
+
   return (
     <Container behavior={Platform.OS === 'ios' ? "padding" : "height"}>
-      <StatusBar backgroundColor="black" barStyle="dark-content" />
       <FlatList
         data={messages}
         keyExtractor={(_, index) => String(index)} 
         renderItem={ ({ item }) => {
-          if (item.id === Device.deviceName) {
+          if (item.name === name) {
             return (
-              <MyMessages >
+              <MyMessages>
                 <MessagesText>{item.message}</MessagesText>
                 <HourText>{moment(item.hour).format('HH:mm')}</HourText>
               </MyMessages>
             )
           };
           return (
-            <OtherMessages style={{
-              borderBottomLeftRadius: -1
-            }}>
+            <OtherMessages>
+              <UsernameText>{item.name}</UsernameText>
               <MessagesText>{item.message}</MessagesText>
               <HourText>{moment(item.hour).format('HH:mm')}</HourText>
             </OtherMessages>
@@ -77,14 +105,14 @@ export function Main() {
         }
         showsVerticalScrollIndicator={false}
       />
-      <InputContainer>
+      <InputContainer style={rStyle}>
         <Input 
           value={inputValue} 
           onChangeText={setInputValue}
           onSubmitEditing={handleSubmit}
           clearButtonMode="always"
           blurOnSubmit={false}
-          />
+        />
       </InputContainer>
     </Container>
   );

@@ -1,17 +1,17 @@
-import { getBottomSpace } from 'react-native-iphone-x-helper';
 import styled from 'styled-components/native';
-
+import { getBottomSpace } from 'react-native-iphone-x-helper';
 
 
 export const Container = styled.KeyboardAvoidingView`
   flex: 1;
-  padding-bottom: ${getBottomSpace() + 20}px;
   justify-content: center;
 `;
 
 export const InputContainer = styled.View`
   padding: 20px;
-  margin-bottom: 10px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
   border-color: #c4c4c4;
   border-top-width: 1px;
 `;
@@ -43,6 +43,15 @@ export const MessagesText = styled.Text`
   font-size: 14px;
   font-weight: 600;
   color: white;
+`;
+
+export const UsernameText = styled.Text`
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255, 0.7);
+  position: absolute;
+  top: 5px;
+  left: 10px;
 `;
 
 export const HourText = styled.Text`
