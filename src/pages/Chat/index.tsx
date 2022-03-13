@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FlatList, Keyboard, Platform } from 'react-native';
-import { getStatusBarHeight } from 'react-native-iphone-x-helper';
+import { getBottomSpace, getStatusBarHeight } from 'react-native-iphone-x-helper';
 import moment from 'moment';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -34,11 +34,11 @@ export function Chat() {
   const room = params.room;
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageProps[]>([]);
-  const bottom = useSharedValue(20);
+  const y = useSharedValue(0);
+  const flatRef = useRef<FlatList>(null);
 
-  
   const rStyle = useAnimatedStyle(() => ({
-    bottom: bottom.value,
+    transform: [{translateY: -y.value}],
   }))
   
   useEffect(() => {
@@ -50,6 +50,7 @@ export function Chat() {
       message: 'chat',
       callback: (data: any) => { 
         setMessages(oldState => [...oldState, data]);
+        flatRef.current?.scrollToEnd();
       },
       data: {},
     });
@@ -69,17 +70,18 @@ export function Chat() {
   }
 
   Keyboard.addListener('keyboardWillShow', (event) => {
-    bottom.value = withTiming(event.endCoordinates.height);
+    y.value = withTiming(event.endCoordinates.height/4);
   })
   Keyboard.addListener('keyboardWillHide', () => {
-    bottom.value = withTiming(20);
+    y.value = withTiming(0);
   })
 
   return (
     <Container behavior={Platform.OS === 'ios' ? "padding" : "height"}>
       <FlatList
         data={messages}
-        keyExtractor={(_, index) => String(index)} 
+        keyExtractor={(_, index) => String(index)}
+        ref={flatRef}
         renderItem={ ({ item }) => {
           if (item.name === name) {
             return (
@@ -112,6 +114,7 @@ export function Chat() {
           onSubmitEditing={handleSubmit}
           clearButtonMode="always"
           blurOnSubmit={false}
+          multiline={false}
         />
       </InputContainer>
     </Container>

@@ -1,27 +1,37 @@
-import { useNavigation } from '@react-navigation/native';
-import { AxiosError } from 'axios';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList } from 'react-native';
+import Lottie from 'lottie-react-native';
+
+import { Skeleton } from '../../components/Skeleton';
+
 import { useEmitSocket } from '../../hooks/useSocket';
+
 import { api } from '../../services/api';
 
-import { Container, RoomButton, RoomText } from './styles';
+import { Container, EmptyText, FloatingButton, FloatingText, RoomButton, RoomText } from './styles';
 
 export const Room = () => {
-  const [rooms, setRooms] = useState();
+  const [rooms, setRooms] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const getRooms = async () => {
       try {
+        setIsLoading(true);
         const response = await api.get('/rooms');
         setRooms(response.data);
-      } catch (error) {
-        const Err = error as AxiosError<{message: string}>;
-        Err.response?.data.message && Alert.alert(Err.response?.data.message)
+      } catch {
+        Alert.alert(
+          "Tivemos problemas", 
+          "no momento não foi possivel, achar salas, tente novamente mais tarde"
+        )
+      } finally {
+        setIsLoading(false)
       }
     }
     getRooms();
-  }, []);
+  }, []));
 
   const handleSelectRoom = (value: string) => {
     Alert.prompt('Digite o nome que deseja utilizar:', undefined, (name) => {
@@ -40,6 +50,14 @@ export const Room = () => {
     });
   }
 
+  const handleCamera = () => {
+    navigation.navigate('camera')
+  }
+
+  if (isLoading) {
+    return <Skeleton />
+  }
+
   return (
     <Container>
       <FlatList 
@@ -51,7 +69,21 @@ export const Room = () => {
             </RoomButton>
           )
         }
+        ListEmptyComponent={
+          <>
+            <EmptyText>Não foi encontrada nenhuma sala no momento</EmptyText>
+            <Lottie
+              source={require('../../../animation.json')} 
+              autoPlay
+              loop 
+              autoSize 
+              /> 
+          </>
+        }
       />
+      <FloatingButton onPress={handleCamera}>
+        <FloatingText>+</FloatingText>
+      </FloatingButton>
     </Container>
   );
 }
