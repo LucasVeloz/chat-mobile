@@ -9,15 +9,17 @@ export const InputContainer = styled.View`
   padding: 20px;
   width: 100%;
   background: white;
+  flex-direction: row;
+  align-items: center;
 `;
 
 export const Input = styled.TextInput`
-  height: 60px;
-  width: 100%;
+  flex: 1;
   border-radius: 10px;
   border-width: 1px;
   border-color: #c4c4c4;
-  padding: 0 20px;
+  padding: 20px;
+  margin-right: 20px;
 `;
 
 export const MyMessages = styled.View`

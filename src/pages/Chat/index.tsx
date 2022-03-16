@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FlatList, Keyboard, Platform } from 'react-native';
-import { getBottomSpace, getStatusBarHeight } from 'react-native-iphone-x-helper';
+import { FlatList, Keyboard, Platform, TouchableOpacity } from 'react-native';
+import { getStatusBarHeight } from 'react-native-iphone-x-helper';
 import moment from 'moment';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { FontAwesome } from '@expo/vector-icons';
 
 import { useEmitSocket, useOnSocket } from '../../hooks/useSocket';
 
@@ -18,15 +19,15 @@ import {
   UsernameText, 
 } from './styles'
 
-const InputContainer = Animated.createAnimatedComponent(InputView);
 
 interface MessageProps {
   name: string;
   message: string;
   hour: Date;
-  };
+};
 
 
+const InputContainer = Animated.createAnimatedComponent(InputView);
 export function Chat() {
   const { params } = useRoute() as {params: {name: string, room: string }};
   const navigation = useNavigation();
@@ -34,11 +35,11 @@ export function Chat() {
   const room = params.room;
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageProps[]>([]);
-  const y = useSharedValue(0);
+  const margin = useSharedValue(0);
   const flatRef = useRef<FlatList>(null);
 
   const rStyle = useAnimatedStyle(() => ({
-    transform: [{translateY: -y.value}],
+    marginBottom: margin.value
   }))
   
   useEffect(() => {
@@ -69,11 +70,11 @@ export function Chat() {
     setInputValue('')
   }
 
-  Keyboard.addListener('keyboardWillShow', (event) => {
-    y.value = withTiming(event.endCoordinates.height/4);
+  Keyboard.addListener('keyboardWillShow', () => {
+    margin.value = withTiming(90);
   })
   Keyboard.addListener('keyboardWillHide', () => {
-    y.value = withTiming(0);
+    margin.value = withTiming(0);
   })
 
   return (
@@ -103,6 +104,7 @@ export function Chat() {
           {
             paddingVertical: getStatusBarHeight() + 20,
             paddingHorizontal: 20,
+            paddingBottom: 80,
           }
         }
         showsVerticalScrollIndicator={false}
@@ -111,11 +113,13 @@ export function Chat() {
         <Input 
           value={inputValue} 
           onChangeText={setInputValue}
-          onSubmitEditing={handleSubmit}
           clearButtonMode="always"
           blurOnSubmit={false}
-          multiline={false}
+          multiline
         />
+        <TouchableOpacity onPress={handleSubmit} disabled={!inputValue}>
+          <FontAwesome name="send" size={24} color={inputValue ? "black" : 'gray'} />
+        </TouchableOpacity>
       </InputContainer>
     </Container>
   );
