@@ -18,6 +18,8 @@ import {
   OtherMessages,
   UsernameText, 
 } from './styles'
+import { useUser } from '../../hooks/useUser';
+import { roleEnumType } from '../../utils';
 
 
 interface MessageProps {
@@ -31,8 +33,8 @@ const InputContainer = Animated.createAnimatedComponent(InputView);
 export function Chat() {
   const { params } = useRoute() as {params: {name: string, room: string }};
   const navigation = useNavigation();
-  const name = params.name;
   const room = params.room;
+  const { name } = useUser();
   const [inputValue, setInputValue] = useState('')
   const [messages, setMessages] = useState<MessageProps[]>([]);
   const margin = useSharedValue(0);
@@ -70,6 +72,11 @@ export function Chat() {
     setInputValue('')
   }
 
+  const handleRole = (value: roleEnumType) => {
+    if (value === 'STUDENT') return '#estudante'
+    return '#professor'
+  }
+
   Keyboard.addListener('keyboardWillShow', () => {
     margin.value = withTiming(90);
   })
@@ -94,7 +101,7 @@ export function Chat() {
           };
           return (
             <OtherMessages>
-              <UsernameText>{item.name}</UsernameText>
+              <UsernameText>{item.name} - {handleRole(item.role)}</UsernameText>
               <MessagesText>{item.message}</MessagesText>
               <HourText>{moment(item.hour).format('HH:mm')}</HourText>
             </OtherMessages>

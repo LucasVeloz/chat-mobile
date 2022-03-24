@@ -48,7 +48,6 @@ export const UserProvider = ({children}: IProvider) => {
   useEffect(() => {
     (async () => {
       const item = await getItem()
-      console.log(item)
       if (item) {
         const data = JSON.parse(item);
         setRole(data.role)

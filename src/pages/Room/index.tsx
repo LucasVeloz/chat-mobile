@@ -16,7 +16,7 @@ export const Room = () => {
   const [rooms, setRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshLoading, setRefreshLoading] = useState(false);
-  const { name } = useUser();
+  const { name, role } = useUser();
   const navigation = useNavigation();
 
   const onRefresh = async () => {
@@ -58,10 +58,11 @@ export const Room = () => {
       message: 'selectRoom',
       data: {
         name,
+        role,
         room: value
       }
     });
-    navigation.navigate('chat', { name, room: value })
+    navigation.navigate('chat', { room: value })
   }
 
   const handleCamera = () => {
