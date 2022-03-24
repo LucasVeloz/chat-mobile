@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList } from 'react-native';
+import { Alert, FlatList, RefreshControl } from 'react-native';
 import Lottie from 'lottie-react-native';
 
 import { Skeleton } from '../../components/Skeleton';
@@ -10,11 +10,30 @@ import { useEmitSocket } from '../../hooks/useSocket';
 import { api } from '../../services/api';
 
 import { Container, EmptyText, FloatingButton, FloatingText, RoomButton, RoomText } from './styles';
+import { useUser } from '../../hooks/useUser';
 
 export const Room = () => {
   const [rooms, setRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshLoading, setRefreshLoading] = useState(false);
+  const { name } = useUser();
   const navigation = useNavigation();
+
+  const onRefresh = async () => {
+    try {
+      setRefreshLoading(true);
+      const response = await api.get('/rooms');
+      setRooms(response.data);
+    } catch {
+      Alert.alert(
+        "Tivemos problemas", 
+        "no momento não foi possivel, achar salas, tente novamente mais tarde"
+      )
+    } finally {
+      setRefreshLoading(false)
+    }
+  }
+
   useFocusEffect(useCallback(() => {
     const getRooms = async () => {
       try {
@@ -29,25 +48,20 @@ export const Room = () => {
       } finally {
         setIsLoading(false)
       }
-    }
+    };
+
     getRooms();
   }, []));
 
   const handleSelectRoom = (value: string) => {
-    Alert.prompt('Digite o nome que deseja utilizar:', undefined, (name) => {
-      if (name) {
-        useEmitSocket({
-          message: 'selectRoom',
-          data: {
-            name,
-            room: value
-          }
-        });
-        navigation.navigate('chat', { name, room: value })
-      } else {
-        Alert.alert('Nome é obrigatório')
+    useEmitSocket({
+      message: 'selectRoom',
+      data: {
+        name,
+        room: value
       }
     });
+    navigation.navigate('chat', { name, room: value })
   }
 
   const handleCamera = () => {
@@ -79,6 +93,12 @@ export const Room = () => {
               autoSize 
               /> 
           </>
+        }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshLoading}
+            onRefresh={onRefresh}
+          />
         }
       />
       <FloatingButton onPress={handleCamera}>

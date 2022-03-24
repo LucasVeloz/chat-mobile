@@ -3,13 +3,23 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Chat } from '../pages/Chat';
 import { Room } from '../pages/Room';
 import { Camera } from '../pages/Camera';
+import { SignUp } from '../pages/SignUp';
+import { useUser } from '../hooks/useUser';
 
 const { Navigator, Screen } = createNativeStackNavigator();
 
-export const StackRoutes = () => (
+export const StackRoutes = () => {
+  const { role } = useUser();
+  return (
   <Navigator screenOptions={{
     gestureEnabled: true
   }}>
+    {
+      !role &&
+      <Screen name="signUp" component={SignUp} options={{
+        headerTitle: 'Cadastro'
+      }} />
+    }
     <Screen name="rooms" component={Room} options={{
       headerTitle: 'Salas'
     }} />
@@ -19,4 +29,5 @@ export const StackRoutes = () => (
       headerShown: false,
     }} />
   </Navigator>
-)
+);
+}
