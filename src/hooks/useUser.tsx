@@ -11,6 +11,7 @@ interface IUser {
 interface UserProps {
   name: string;
   role: roleEnumType | null;
+  loading: boolean;
 }
 
 interface Props extends UserProps {
@@ -26,6 +27,7 @@ const user = createContext<null | Props>(null);
 export const UserProvider = ({children}: IProvider) => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<roleEnumType | null>(null);
+  const [loading, setLoading] = useState(true);
   const { setItem, getItem, removeItem } = useAsyncStorage(userKey);
 
   const updateUser = useCallback(async (value: IUser) => {
@@ -47,12 +49,14 @@ export const UserProvider = ({children}: IProvider) => {
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       const item = await getItem()
       if (item) {
         const data = JSON.parse(item);
         setRole(data.role)
         setName(data.name)
       }
+      setLoading(false);
     })()
   }, [])
 
@@ -63,7 +67,7 @@ export const UserProvider = ({children}: IProvider) => {
   // }, [])
 
   return (
-    <user.Provider value={{ role, name, updateUser }}>
+    <user.Provider value={{ role, name, updateUser, loading }}>
       {children}
     </user.Provider>
   )

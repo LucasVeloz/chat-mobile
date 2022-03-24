@@ -73,8 +73,8 @@ export function Chat() {
   }
 
   const handleRole = (value: roleEnumType) => {
-    if (value === 'STUDENT') return '#estudante'
-    return '#professor'
+    if (value === 'STUDENT') return ' - estudante'
+    return ' - professor'
   }
 
   Keyboard.addListener('keyboardWillShow', () => {
@@ -101,7 +101,7 @@ export function Chat() {
           };
           return (
             <OtherMessages>
-              <UsernameText>{item.name} - {handleRole(item.role)}</UsernameText>
+              <UsernameText>{item.name}{handleRole(item.role)}</UsernameText>
               <MessagesText>{item.message}</MessagesText>
               <HourText>{moment(item.hour).format('HH:mm')}</HourText>
             </OtherMessages>
