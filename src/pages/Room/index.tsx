@@ -1,7 +1,8 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList, RefreshControl } from 'react-native';
 import Lottie from 'lottie-react-native';
+import { getPermissionsAsync, requestPermissionsAsync, setNotificationHandler } from 'expo-notifications';
 
 import { Skeleton } from '../../components/Skeleton';
 
@@ -11,6 +12,14 @@ import { api } from '../../services/api';
 
 import { Container, EmptyText, FloatingButton, FloatingText, RoomButton, RoomText } from './styles';
 import { useUser } from '../../hooks/useUser';
+
+setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 export const Room = () => {
   const [rooms, setRooms] = useState([]);
@@ -34,6 +43,30 @@ export const Room = () => {
     }
   }
 
+  const handleSelectRoom = (value: string) => {
+    useEmitSocket({
+      message: 'selectRoom',
+      data: {
+        name,
+        role,
+        room: value
+      }
+    });
+    navigation.navigate('chat', { room: value })
+  }
+
+  const handleCamera = () => {
+    navigation.navigate('camera')
+  }
+
+  useEffect(() => {
+    (async () => {
+      const { granted } = await getPermissionsAsync()
+      if (granted) return;
+      await requestPermissionsAsync();
+    })()
+  }, [])
+
   useFocusEffect(useCallback(() => {
     const getRooms = async () => {
       try {
@@ -52,22 +85,6 @@ export const Room = () => {
 
     getRooms();
   }, []));
-
-  const handleSelectRoom = (value: string) => {
-    useEmitSocket({
-      message: 'selectRoom',
-      data: {
-        name,
-        role,
-        room: value
-      }
-    });
-    navigation.navigate('chat', { room: value })
-  }
-
-  const handleCamera = () => {
-    navigation.navigate('camera')
-  }
 
   if (isLoading) {
     return <Skeleton />

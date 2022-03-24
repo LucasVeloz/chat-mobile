@@ -19,7 +19,8 @@ import {
   UsernameText, 
 } from './styles'
 import { useUser } from '../../hooks/useUser';
-import { roleEnumType } from '../../utils';
+import { roleEnum, roleEnumType } from '../../utils';
+import { scheduleNotificationAsync } from 'expo-notifications';
 
 
 interface MessageProps {
@@ -43,6 +44,18 @@ export function Chat() {
   const rStyle = useAnimatedStyle(() => ({
     marginBottom: margin.value
   }))
+
+  const handleNotification = async (data: any) => {
+    if (data.role === roleEnum.TEACHER && data.message.includes('#tarefa')) {
+      await scheduleNotificationAsync({
+        content: {
+          title: 'Tarefa',
+          body: 'tarefa incluída pelo professor'
+        },
+        trigger: null,
+      })
+    }
+  }
   
   useEffect(() => {
     navigation.setOptions({title: room});
@@ -52,6 +65,7 @@ export function Chat() {
     useOnSocket({
       message: 'chat',
       callback: (data: any) => { 
+        handleNotification(data);
         setMessages(oldState => [...oldState, data]);
         flatRef.current?.scrollToEnd();
       },
